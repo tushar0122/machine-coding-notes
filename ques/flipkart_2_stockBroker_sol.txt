@@ -1,0 +1,148 @@
+package org.example.stockBroker;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
+
+// Enum for Transaction Types
+enum TransactionType {
+    BUY, SELL
+}
+
+// Enum for Client Types
+enum ClientType {
+    GOLD, SILVER
+}
+
+// Stock class
+class Stock {
+    private final String stockId;
+    private double price;
+
+    public Stock(String stockId, double price) {
+        this.stockId = stockId;
+        this.price = price;
+    }
+
+    public String getStockId() { return stockId; }
+    public double getPrice() { return price; }
+    public void updatePrice(double newPrice) { this.price = newPrice; }
+}
+
+// Client class
+class Client {
+    private final String clientId;
+    private final ClientType clientType;
+    private double capital;
+    private final Map<String, Integer> portfolio;
+    private final Map<String, Integer> intraDayTransactions;
+    private final ReentrantLock lock;
+
+    public Client(String clientId, double capital, ClientType clientType) {
+        this.clientId = clientId;
+        this.capital = capital;
+        this.clientType = clientType;
+        this.portfolio = new HashMap<>();
+        this.intraDayTransactions = new HashMap<>();
+        this.lock = new ReentrantLock();
+    }
+
+    public String getClientId() { return clientId; }
+    public double getCapital() { return capital; }
+    public void updateCapital(double amount) { this.capital += amount; }
+
+    public synchronized void buyStock(Stock stock, int quantity, int day) {
+        double totalCost = stock.getPrice() * quantity;
+        double tax = totalCost * 0.05;
+        double totalPayable = totalCost + tax;
+
+        double overdraftUsed = 0;
+        if (this.capital < totalPayable && clientType == ClientType.GOLD) {
+            overdraftUsed = Math.min(10000, totalPayable - this.capital);
+            totalPayable += overdraftUsed * 0.1;
+        }
+
+        if (this.capital + 10000 >= totalPayable) {
+            this.capital -= totalPayable;
+            portfolio.put(stock.getStockId(), portfolio.getOrDefault(stock.getStockId(), 0) + quantity);
+            intraDayTransactions.put(stock.getStockId(), intraDayTransactions.getOrDefault(stock.getStockId(), 0) + quantity);
+        } else {
+            System.out.println("Insufficient funds for purchase");
+        }
+    }
+
+    public synchronized void sellStock(Stock stock, int quantity, int day) {
+        if (!portfolio.containsKey(stock.getStockId()) || portfolio.get(stock.getStockId()) < quantity) {
+            System.out.println("Not enough shares to sell");
+            return;
+        }
+
+        double totalGain = stock.getPrice() * quantity;
+        double tax = intraDayTransactions.getOrDefault(stock.getStockId(), 0) >= quantity ? totalGain * 0.1 : totalGain * 0.05;
+        this.capital += (totalGain - tax);
+        portfolio.put(stock.getStockId(), portfolio.get(stock.getStockId()) - quantity);
+
+        if (portfolio.get(stock.getStockId()) == 0) {
+            portfolio.remove(stock.getStockId());
+        }
+    }
+
+    public synchronized void printHoldings() {
+        System.out.println("Client: " + clientId + " | Capital: " + capital + " | Portfolio: " + portfolio);
+    }
+}
+
+// StockBroker class
+class StockBroker {
+    private final Map<String, Client> clients;
+    private final Map<String, Stock> stocks;
+
+    public StockBroker() {
+        this.clients = new ConcurrentHashMap<>();
+        this.stocks = new ConcurrentHashMap<>();
+    }
+
+    public void createClient(String clientId, double capital, ClientType clientType) {
+        clients.put(clientId, new Client(clientId, capital, clientType));
+    }
+
+    public void updateStockPrice(String stockId, double price) {
+        stocks.putIfAbsent(stockId, new Stock(stockId, price));
+        stocks.get(stockId).updatePrice(price);
+    }
+
+    public void processTransaction(TransactionType type, String clientId, String stockId, int quantity, int day) {
+        Client client = clients.get(clientId);
+        Stock stock = stocks.get(stockId);
+        if (client == null || stock == null) {
+            System.out.println("Invalid client or stock");
+            return;
+        }
+        if (type == TransactionType.BUY) {
+            client.buyStock(stock, quantity, day);
+        } else {
+            client.sellStock(stock, quantity, day);
+        }
+    }
+
+    public void printClientHoldings(String clientId) {
+        clients.get(clientId).printHoldings();
+    }
+
+    public void printAllHoldings() {
+        clients.values().forEach(Client::printHoldings);
+    }
+}
+
+// Main class
+public class StockBrokerSystem {
+    public static void main(String[] args) {
+        StockBroker broker = new StockBroker();
+        broker.createClient("C1", 50000, ClientType.GOLD);
+        broker.updateStockPrice("S1", 100);
+        broker.processTransaction(TransactionType.BUY, "C1", "S1", 10, 1);
+        broker.processTransaction(TransactionType.SELL, "C1", "S1", 5, 1);
+        broker.printClientHoldings("C1");
+        broker.printAllHoldings();
+    }
+}
