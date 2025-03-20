@@ -1,33 +1,11 @@
-Please help me with machine coding problem asked in interview
-Implement in Java 
-Try to use SOLID principles whereever possible
-Try to use Singleton Pattern, Factory Pattern, Strategy Pattern whereever possible
-Try to use design patterns wherever possible 
-Try to use OOPs concept wherever possible
-Try to have Multithreading where needed
-Have logs wherever possible 
-Throw Exceptions wherever needed
-Write code which can handle billions of request 
+=> constants 
+    => enums 
+=> entities 
+=> services 
+=> Driver Class 
 
-ConcurrentHashMap how useful
-lock 
-ReentrantLock
-logger in java util
-
-You are tasked with building a stockbroker system where multiple clients manage their portfolios, which consist of stocks and capital. Your system will handle real-time stock transactions, portfolio management, stock price updates, and tax calculations for clients with various account types.
-The system will process input events in chronological order. These events represent client account creation, stock price updates, and buy/sell transactions. The goal is to track and update each client's holdings (stocks and capital), applying transaction taxes.
-Operations:
-Create client : C <ClientId> <Capital>
-Create/Update share with price : S <ShareId> <Price>
-Transaction : Buy/Sell <ClientId> <ShareId> <Quantity> <Day (integer)>
-Print a client’s holdings : P <ClientId>
-Print all clients’ holdings : P
-
-Stock prices are subject to updates, but a client’s capital can only change based on their transactions.
-Taxation Rules:
-Buy Transaction: A 5% Tax Deducted at Source (TDS) is applied on the transaction value.
-Sell Transaction:
-Intra-day: A 10% tax is applied on the transaction value.
-Inter-day: A 5% tax is applied on the transaction value.
-*If stocks are sold on the same day they are bought, the transaction is considered intra-day. Otherwise, it's inter-day.
-We will start at day 0, with input events being given in chronological order (as the events occur). These clients will perform various transactions on stocks on particular days. The stock broker is responsible for carrying out these transactions and updating the clients of their current holdings (stocks and capital). 
+Make all fields private wherever possible
+Make max classes Singleton whereever possible 
+No if else statement 
+    => If ever use factory pattern, strategy pattern
+    
