@@ -6,8 +6,10 @@ Try to use design patterns wherever possible
 Try to use OOPs concept wherever possible
 Try to have Multithreading where needed
 Have logs wherever possible 
-Throw Exceptions wherever needed
-Write code which can handle billions of request 
+Add try catch where needed
+Write code which can handle millions of request 
+
+done.
 
 ConcurrentHashMap how useful
 lock 
